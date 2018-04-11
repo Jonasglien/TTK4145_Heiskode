@@ -60,6 +60,7 @@ func Broadcast_state(bcast <- chan state.Elevator) {
 	}
 }
 
+
 func Poll_remote_state(output *state.Elevator) {
 	localip := get_localip()
 
@@ -105,7 +106,57 @@ func Poll_remote_state2(output *state.Elevator) {
 		fmt.Println("Received: ", *output)
 	}
 }
+//**unfinished**
+func Broadcast_order() {
 
+	//broadcast order to other elevators
+	localip := get_localip()
+
+	local_addr, err := net.ResolveUDPAddr("udp", localip + ":0")
+	state.Check(err)
+	target_addr,err := net.ResolveUDPAddr("udp", remote_elev_IP1)
+	state.Check(err)
+	target_addr2,err := net.ResolveUDPAddr("udp", remote_elev_IP2)
+	state.Check(err)
+	out_connection, err := net.DialUDP("udp", local_addr, target_addr)
+	state.Check(err)
+	out_connection2, err := net.DialUDP("udp", local_addr, target_addr)
+	state.Check(err)
+	local_connection, err := net.DialUDP("udp", local_addr, localip + ":10003")
+	state.Check(err)
+	defer out_connection.Close()
+	defer out_connection2.Close()
+	defer local_connection.Close()
+	
+	for {
+		select {
+		case data := <- bcast: //change to something free
+			send_order(data, out_connection) //send_order needs to be made
+			send_order(data, out_connection2)
+			send_order(data, local_connection)
+		}
+	}
+
+}
+//**unfinished**
+func Poll_order()
+
+	//receive order
+	//Triggers on receiving order from port
+	//polls order and sends order through channel to evaluate function
+	network.Broadcast_state()
+	network.Poll remote_state()
+	network.Poll_remote_state2()
+	<- states_complete
+				
+	cost_local := driver.Evaluate(e, order)
+	cost_e2 := driver.Evaluate(e2, order)
+	cost_e3 := driver.Evaluate(e3, order)
+	Choose_elevator(cost_local, cost_e2. cost_e3)
+	<- order_taken
+	//Order_accept()
+
+}
 
 func send_state(state state.Elevator, connection *net.UDPConn) {
 	jsonRequest, err := json.Marshal(state)

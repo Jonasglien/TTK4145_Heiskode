@@ -34,15 +34,20 @@ func Button_manager(b <- chan ButtonEvent, save chan <- bool, e *state.Elevator)
 					move_to_next_floor(e)
 				}
 			} else if (event.Button == BT_Hallup || BT_Halldown) { 
-			
-			        network.broadcast_state()
-			        //poll states
-			        //time.Sleep(100*Millisecond)
+				order := Button_event_to_order(event)
+				network.Broadcast_order(order)
+				<- order_registered
 				
-				cost_local := driver.Evaluate(e)
-				cost_e2 := driver.Evaluate(e2)
-				cost_e3 := driver.Evaluate(e3)
-			        Choose_elevator()
+			    network.Broadcast_state()
+			    network.Poll remote_state()
+			    network.Poll_remote_state2()
+				<- states_complete
+				
+				cost_local := driver.Evaluate(e, order)
+				cost_e2 := driver.Evaluate(e2, order)
+				cost_e3 := driver.Evaluate(e3, order)
+			    Choose_elevator(cost_local, cost_e2, cost_e3)
+				<- order_taken
 				
 				if (network.is_Alive)
 					wd_timeout := make(chan bool)
